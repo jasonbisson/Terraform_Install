@@ -1,2 +1,2 @@
-# install_terraform
-Simple script to install the latest version of Terraform
+# install_hashicorp
+Simple scripts to install the latest version of Hashicorp
