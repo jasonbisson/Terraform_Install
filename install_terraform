@@ -1,0 +1,39 @@
+#!/bin/bash
+#set -x
+
+
+function install_prerequisite () {
+sudo apt-get install --assume-yes jq unzip 
+}
+
+function download_terraform (){
+# Get URLs for most recent versions
+latest_version=$(curl --silent https://releases.hashicorp.com/terraform/ |grep terraform | head -1 |awk -F_ '{print $2}' |awk -F[\<\] '{print $1}')
+terraform_url=$(curl --silent https://releases.hashicorp.com/index.json | jq '{terraform}' | grep "$latest_version" | grep "url" | egrep "linux.*64" | sort -h | head -1 | awk -F[\"] '{print $4}')
+# Download Terraform. URI: https://www.terraform.io/downloads.html
+curl -o terraform.zip $terraform_url
+}
+
+function install2system () {
+# Unzip and install
+unzip -o terraform.zip
+
+#Copy to /usr/local/bin
+sudo cp -rf terraform /usr/local/bin
+}
+
+function validate () {
+#validate download and version
+terraform -version
+if [ $? -ne 0 ]
+then
+       echo "Terraform validation failed. Enable set -x to debug"
+else 
+ 	rm -f terraform terraform.zip	
+fi
+}
+
+install_prerequisite
+download_terraform
+install2system
+validate
