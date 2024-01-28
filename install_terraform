@@ -1,36 +1,34 @@
 #!/bin/bash
-#set -x
 
-
-function install_prerequisite () {
-sudo apt-get install --assume-yes jq unzip 
+function install_prerequisite() {
+  sudo apt-get install --assume-yes jq unzip
 }
 
-function download_terraform (){
-# Get URLs for most recent versions
-latest_version=$(curl --silent https://releases.hashicorp.com/terraform/ |grep terraform | head -1 |awk -F_ '{print $2}' |awk -F[\<\] '{print $1}')
-terraform_url=$(curl --silent https://releases.hashicorp.com/index.json | jq '{terraform}' | grep "$latest_version" | grep "url" | egrep "linux.*64" | sort -h | head -1 | awk -F[\"] '{print $4}')
-# Download Terraform. URI: https://www.terraform.io/downloads.html
-curl -o terraform.zip $terraform_url
+function download_terraform() {
+  # Get the latest version using the HashiCorp Releases API
+  latest_version=$(curl -s https://api.releases.hashicorp.com/v1/releases/terraform | jq -r '.[].version' | sort -rV | head -n 1)
+
+  # Construct download URL directly 
+  terraform_url="https://releases.hashicorp.com/terraform/${latest_version}/terraform_${latest_version}_linux_amd64.zip"
+
+  # Download Terraform
+  curl -o terraform.zip "$terraform_url"
 }
 
-function install2system () {
-# Unzip and install
-unzip -o terraform.zip
+function install2system() {
+  unzip -o terraform.zip
 
-#Copy to /usr/local/bin
-sudo cp -rf terraform /usr/local/bin
+  # Provide guidance about elevated permissions
+  sudo cp terraform /usr/local/bin 
 }
 
-function validate () {
-#validate download and version
-terraform -version
-if [ $? -ne 0 ]
-then
-       echo "Terraform validation failed. Enable set -x to debug"
-else 
- 	rm -f terraform terraform.zip	
-fi
+function validate() {
+  terraform -version
+  if [ $? -ne 0 ]; then
+    echo "Terraform validation failed. Enable set -x to debug"
+  else 
+    rm -f terraform terraform.zip      
+  fi
 }
 
 install_prerequisite
